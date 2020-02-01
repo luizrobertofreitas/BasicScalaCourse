@@ -1,7 +1,5 @@
 package com.basicscalacourse
 
-import scala.collection.immutable.Stream.Cons
-
 trait MyPredicate[-T] {
   def test(t: T): Boolean
 }
@@ -10,15 +8,15 @@ trait MyTransformer[-A, B] {
   def transform(a: A): B
 }
 
-abstract class MyList[+A] {
+abstract class MyList[+A] { // Whatever the subtypes informed in the methods
   def head: A
   def tail: MyList[A]
   def isEmpty: Boolean
-  def add[B >: A](n: B): MyList[B]
+  def add[B >: A](n: B): MyList[B] // Anything it receives to concat with `this`, will turn into MyList[this], because, generic tells that anything restricted to B that behaves as B extends A
   def map[B](transformer: MyTransformer[A, B]): MyList[B]
   def filter(predicate: MyPredicate[A]): MyList[A]
   def flatMap[B](transformer: MyTransformer[A, MyList[B]]): MyList[B]
-  def ++[B >: A](list: MyList[B]): MyList[B]
+  def ++[B >: A](list: MyList[B]): MyList[B] // Anything it receives to concat with `this`, will turn into MyList[this], because, generic tells that anything restricted to B that behaves as B extends A
   def printElement: String
   override def toString: String = "[" + printElement + "]"
 }
@@ -39,7 +37,7 @@ class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
   override def head: A = h
   override def isEmpty: Boolean = false
   override def tail: MyList[A] = t
-  override def add[B >: A](n: B): MyList[B] = new Cons(n, this) // The head will be the new element. FIXME
+  override def add[B >: A](n: B): MyList[B] = new Cons(h, this.tail ++ new Cons(n, Empty))
   def printElement: String = if (t.isEmpty) "" + h else h + ", " + t.printElement
   def ++[B >: A](list: MyList[B]): MyList[B] = new Cons(h, t ++ list)
   override def filter(predicate: MyPredicate[A]): MyList[A] =
@@ -70,4 +68,7 @@ object MainLists extends App {
     override def test(t: Int): Boolean = t >= 5
   })
   println(filteredList)
+
+  val addSomeElementsToList1 = list.add(4).add(5).add(6).add(7)
+  println(addSomeElementsToList1.toString)
 }

@@ -37,7 +37,7 @@ class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
   override def head: A = h
   override def isEmpty: Boolean = false
   override def tail: MyList[A] = t
-  override def add[B >: A](n: B): MyList[B] = new Cons(h, this.tail ++ new Cons(n, Empty))
+  override def add[B >: A](n: B): MyList[B] = new Cons(h, t ++ new Cons(n, Empty))
   def printElement: String = if (t.isEmpty) "" + h else h + ", " + t.printElement
   def ++[B >: A](list: MyList[B]): MyList[B] = new Cons(h, t ++ list)
   override def filter(predicate: MyPredicate[A]): MyList[A] =

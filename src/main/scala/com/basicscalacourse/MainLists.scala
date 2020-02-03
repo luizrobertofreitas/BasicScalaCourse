@@ -1,21 +1,13 @@
 package com.basicscalacourse
 
-trait MyPredicate[-T] {
-  def test(t: T): Boolean
-}
-
-trait MyTransformer[-A, B] {
-  def transform(a: A): B
-}
-
 abstract class MyList[+A] { // Whatever the subtypes informed in the methods
   def head: A
   def tail: MyList[A]
   def isEmpty: Boolean
   def add[B >: A](n: B): MyList[B] // Anything it receives to concat with `this`, will turn into MyList[this], because, generic tells that anything restricted to B that behaves as B extends A
-  def map[B](transformer: Function1[A, B]): MyList[B]
-  def filter(predicate: Function1[A, Boolean]): MyList[A]
-  def flatMap[B](transformer: Function1[A, MyList[B]]): MyList[B]
+  def map[B](transformer: (A)=> B): MyList[B]
+  def filter(predicate: (A) => Boolean): MyList[A]
+  def flatMap[B](transformer: (A) => MyList[B]): MyList[B]
   def ++[B >: A](list: MyList[B]): MyList[B] // Anything it receives to concat with `this`, will turn into MyList[this], because, generic tells that anything restricted to B that behaves as B extends A
   def printElement: String
   override def toString: String = "[" + printElement + "]"
@@ -26,9 +18,9 @@ case object Empty extends MyList[Nothing] {
   override def tail: MyList[Nothing] = throw new NoSuchElementException
   override def isEmpty: Boolean = true
   override def add[B >: Nothing](n: B): MyList[B] = new Cons(n, Empty)
-  override def map[B](transformer: Function1[Nothing, B]): MyList[B] = Empty
-  override def filter(predicate: Function1[Nothing, Boolean]): MyList[Nothing] = Empty
-  override def flatMap[B](transformer: Function1[Nothing, MyList[B]]): MyList[B] = Empty
+  override def map[B](transformer: (Nothing) => B): MyList[B] = Empty
+  override def filter(predicate: (Nothing) => Boolean): MyList[Nothing] = Empty
+  override def flatMap[B](transformer: (Nothing) => MyList[B]): MyList[B] = Empty
   def ++[B >: Nothing](list: MyList[B]): MyList[B] = list
   override def printElement: String = ""
 }
@@ -40,12 +32,12 @@ case class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
   override def add[B >: A](n: B): MyList[B] = new Cons(h, t ++ new Cons(n, Empty))
   def printElement: String = if (t.isEmpty) "" + h else h + ", " + t.printElement
   def ++[B >: A](list: MyList[B]): MyList[B] = new Cons(h, t ++ list)
-  override def filter(predicate: Function1[A, Boolean]): MyList[A] =
+  override def filter(predicate: (A) => Boolean): MyList[A] =
     if (predicate(h)) new Cons(h, t.filter(predicate))
     else t.filter(predicate)
-  override def map[B](transformer: Function1[A, B]): MyList[B] =
+  override def map[B](transformer: (A) => B): MyList[B] =
     new Cons(transformer(h), t.map(transformer))
-  override def flatMap[B](transformer: Function1[A, MyList[B]]): MyList[B] =
+  override def flatMap[B](transformer: (A) => MyList[B]): MyList[B] =
     transformer(h) ++ t.flatMap(transformer)
 }
 
@@ -55,18 +47,12 @@ object MainLists extends App {
   val list2 = new Cons(4, new Cons(5, new Cons(6, Empty)))
   val list3 = list ++ list2
   println(list3.toString)
-  val list4 = list3.flatMap(new Function1[Int, MyList[Int]] {
-    override def apply(a: Int): MyList[Int] = new Cons(a, new Cons(a + 1, Empty))
-  })
+  val list4 = list3.flatMap((a: Int) => new Cons(a, new Cons(a + 1, Empty)))
   println(list4.toString)
-  val list5 = list4.map(new Function1[Int, MyList[Int]] {
-    override def apply(a: Int): MyList[Int] = new Cons(a * 2, new Cons(a * 3, Empty))
-  })
+  val list5 = list4.map((a: Int) => new Cons(a * 2, new Cons(a * 3, Empty)))
   println(list5)
 
-  val filteredList = list4.filter(new Function1[Int, Boolean] {
-    override def apply(t: Int): Boolean = t >= 5
-  })
+  val filteredList = list4.filter((t: Int) => t >= 5)
   println(filteredList)
 
   val addSomeElementsToList1 = list.add(4).add(5).add(6).add(7)
